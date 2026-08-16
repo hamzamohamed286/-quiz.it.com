@@ -182,23 +182,25 @@
     </div>
 
 <script type="module">
+    // استيراد مكتبات فايربيس (إصدار Realtime Database)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // مفتاح API تم تصحيحه (يحتوي على الرقم 0)
+    // إعدادات مشروعك الجديدة
     const firebaseConfig = {
-        apiKey: "AIzaSyDeZWl6hJ2DD09NDmjrsVIoIq4p65QWGzw",
-        authDomain: "quiz-it-com.firebaseapp.com",
-        projectId: "quiz-it-com",
-        storageBucket: "quiz-it-com.firebasestorage.app",
-        messagingSenderId: "918612457601",
-        appId: "1:918612457601:web:18ddac1077cf6a0539f580"
+        apiKey: "AIzaSyAzh6pmoW-thU6AzlUzJH4rwqz1J5rLDBY",
+        authDomain: "quiz-it-b775f.firebaseapp.com",
+        databaseURL: "https://quiz-it-b775f-default-rtdb.firebaseio.com",
+        projectId: "quiz-it-b775f",
+        storageBucket: "quiz-it-b775f.firebasestorage.app",
+        messagingSenderId: "296710652111",
+        appId: "1:296710652111:web:7b2924a85e93be484c37ba"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db = getDatabase(app);
 
     // ==========================================
     // دوال الواجهة
@@ -249,38 +251,10 @@
     }
 
     // ==========================================
-    // قاعدة البيانات (جلب وإضافة المواد)
+    // قاعدة البيانات (Realtime Database)
     // ==========================================
-    window.loadSubjects = async function() {
-        const container = document.getElementById('subjects-container');
-        try {
-            const q = query(collection(db, "subjects"), orderBy("createdAt", "desc"));
-            const querySnapshot = await getDocs(q);
-            
-            container.innerHTML = ''; 
-            
-            if (querySnapshot.empty) {
-                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1;">لا توجد مواد مضافة حتى الآن.</p>';
-                return;
-            }
-
-            querySnapshot.forEach((doc) => {
-                const subject = doc.data();
-                container.innerHTML += `
-                    <div class="subject-card">
-                        <h2 class="subject-title">${subject.name}</h2>
-                        <div class="lecture-list" id="lectures-${doc.id}">
-                            <span style="color: var(--text-muted); font-size: 0.9rem;">(لا توجد محاضرات بعد)</span>
-                        </div>
-                    </div>
-                `;
-            });
-        } catch (error) {
-            console.error("خطأ في جلب المواد:", error);
-            container.innerHTML = '<p style="color: var(--error); text-align: center; grid-column: 1 / -1;">حدث خطأ أثناء تحميل البيانات. الرجاء التحقق من الصلاحيات.</p>';
-        }
-    }
-
+    
+    // دالة إضافة مادة
     window.addSubject = async function() {
         const subjectInput = document.getElementById('subject-name');
         const subjectName = subjectInput.value.trim();
@@ -291,17 +265,52 @@
         }
 
         try {
-            await addDoc(collection(db, "subjects"), {
+            // إضافة البيانات إلى مسار 'subjects' في Realtime DB
+            const subjectsRef = ref(db, 'subjects');
+            const newSubjectRef = push(subjectsRef);
+            await set(newSubjectRef, {
                 name: subjectName,
-                createdAt: new Date()
+                createdAt: Date.now()
             });
+            
             alert("تمت الإضافة بنجاح!");
             subjectInput.value = ''; 
-            loadSubjects(); // تحديث القائمة فوراً
         } catch (error) {
             console.error(error);
             alert("حدث خطأ أثناء الحفظ: " + error.message);
         }
+    }
+
+    // دالة جلب وعرض المواد (مستمع في الوقت الفعلي)
+    window.loadSubjects = function() {
+        const container = document.getElementById('subjects-container');
+        const subjectsRef = ref(db, 'subjects');
+        
+        onValue(subjectsRef, (snapshot) => {
+            container.innerHTML = ''; 
+            const data = snapshot.val();
+            
+            if (!data) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1;">لا توجد مواد مضافة حتى الآن.</p>';
+                return;
+            }
+
+            // تحويل الكائن إلى مصفوفة لعرضها
+            Object.keys(data).forEach((key) => {
+                const subject = data[key];
+                container.innerHTML += `
+                    <div class="subject-card">
+                        <h2 class="subject-title">${subject.name}</h2>
+                        <div class="lecture-list" id="lectures-${key}">
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">(لا توجد محاضرات بعد)</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }, (error) => {
+            console.error("خطأ في جلب المواد:", error);
+            container.innerHTML = '<p style="color: var(--error); text-align: center; grid-column: 1 / -1;">حدث خطأ أثناء تحميل البيانات.</p>';
+        });
     }
 
     // استدعاء جلب المواد عند تحميل الصفحة
