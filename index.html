@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Quiz Platform</title>
+    <title>المنصة التعليمية</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             --bg-main: #0f172a;
@@ -12,17 +14,12 @@
             --primary-hover: #0ea5e9;
             --success: #10b981;
             --error: #ef4444;
-            --skipped: #64748b;
             --text-main: #f8fafc;
             --text-muted: #cbd5e1;
-            --glass-bg: rgba(15, 23, 42, 0.2); 
+            --glass-bg: rgba(15, 23, 42, 0.4); 
             --glass-border: rgba(255, 255, 255, 0.08);
             --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            --glass-blur: blur(20px);
-            --empty-circle: rgba(255, 255, 255, 0.05);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --blob-1: #38bdf8;
-            --blob-2: #818cf8;
+            --transition: all 0.3s ease;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
@@ -34,68 +31,80 @@
             width: 100%; 
             display: flex; 
             flex-direction: column; 
-            align-items: center; 
-            padding: 2rem 1rem 1rem 1rem; 
+            padding: 1.5rem 1rem; 
             overflow: hidden; 
-            position: relative; 
         }
 
         .background-blobs { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; pointer-events: none; }
         .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.45; }
-        .blob-1 { width: 450px; height: 450px; background: var(--blob-1); top: -10%; right: -10%; animation: float-random-1 70s infinite ease-in-out; }
-        .blob-2 { width: 400px; height: 400px; background: var(--blob-2); bottom: -10%; left: -10%; animation: float-random-2 80s infinite ease-in-out; }
+        .blob-1 { width: 450px; height: 450px; background: var(--primary); top: -10%; right: -10%; animation: float-random-1 70s infinite ease-in-out; }
+        .blob-2 { width: 400px; height: 400px; background: #818cf8; bottom: -10%; left: -10%; animation: float-random-2 80s infinite ease-in-out; }
 
-        .container { max-width: 1100px; width: 100%; flex-grow: 1; display: flex; gap: 1.5rem; min-height: 0; position: relative; z-index: 10; }
-        .glass-panel { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 24px; padding: 1.5rem; box-shadow: var(--glass-shadow); display: flex; flex-direction: column; }
+        /* --- النظام العام للواجهات --- */
+        .view-section { display: none; height: 100%; animation: fadeIn 0.4s; flex-direction: column; }
+        .view-section.active { display: flex; }
         
-        .view-section { display: none; width: 100%; height: 100%; animation: fadeIn 0.4s ease forwards; }
-        .view-section.active { display: flex; flex-direction: column; gap: 1.5rem; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 1.5rem; flex-shrink: 0; }
+        .scrollable-content { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
+        .scrollable-content::-webkit-scrollbar { width: 5px; }
+        .scrollable-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0; }
-        .page-title { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; color: var(--primary); }
+        /* --- واجهة الإدارة (الشجرة) --- */
+        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; height: 100%; }
+        .admin-box { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 1rem; display: flex; flex-direction: column; opacity: 0.4; pointer-events: none; transition: var(--transition); max-height: 100%; }
+        .admin-box.active { opacity: 1; pointer-events: all; border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 0 20px rgba(56, 189, 248, 0.05); }
+
+        /* --- عناصر الإدخال والأزرار --- */
+        .input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: stretch; }
+        .glass-input { flex-grow: 1; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 0.8rem; border-radius: 12px; font-size: 0.95rem; outline: none; transition: var(--transition); }
+        .glass-input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(56,189,248,0.2); }
         
-        .btn { border-radius: 14px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); color: #fff; display: flex; align-items: center; justify-content: center; padding: 0.8rem 1.5rem; }
-        .btn-primary { background: var(--primary); color: var(--bg-main); box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25); }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4); }
-        .btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); }
-        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
-        .btn-danger { background: rgba(239, 68, 68, 0.15); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.4); }
-        .btn-danger:hover { background: var(--error); color: #fff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+        /* تنسيق القوائم المنسدلة */
+        select.glass-input {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2338bdf8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat; background-position: left 1rem top 50%; background-size: 0.8rem auto;
+        }
+        select.glass-input option { background-color: var(--bg-main); color: var(--text-main); font-weight: 500; }
 
-        .glass-input { width: 100%; padding: 1rem 1.2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; transition: var(--transition); }
-        .glass-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); background: rgba(255, 255, 255, 0.08); }
-        .glass-input::placeholder { color: var(--text-muted); opacity: 0.6; }
-        
-        textarea.glass-input { resize: vertical; min-height: 100px; }
-        select.glass-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2338bdf8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: left 1rem top 50%; background-size: 0.8rem auto; }
-        select.glass-input option { background: var(--bg-main); color: var(--text-main); }
+        .btn { background: var(--primary); color: var(--bg-main); border: none; border-radius: 12px; padding: 0.8rem 1.5rem; cursor: pointer; font-weight: bold; transition: var(--transition); display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(56,189,248,0.3); }
+        .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
+        .btn-action { background: var(--primary); color: var(--bg-main); border: none; border-radius: 12px; padding: 0 1.2rem; cursor: pointer; font-size: 1.2rem; transition: var(--transition); }
+        .btn-action.edit-mode { background: var(--success); color: white; }
 
-        .scrollable { overflow-y: auto; padding-left: 5px; }
-        .scrollable::-webkit-scrollbar { width: 5px; }
-        .scrollable::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        /* --- القوائم (الإدارة) --- */
+        .list-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.02); border: 1px solid transparent; padding: 0.8rem; border-radius: 12px; margin-bottom: 0.5rem; cursor: pointer; transition: var(--transition); }
+        .list-item:hover { background: rgba(255, 255, 255, 0.05); }
+        .list-item.selected { background: rgba(56, 189, 248, 0.1); border-color: var(--primary); }
+        .icon-btn { background: none; border: none; padding: 0.4rem; cursor: pointer; color: var(--text-muted); transition: 0.2s; border-radius: 8px; }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .icon-btn.danger:hover { color: var(--error); background: rgba(239, 68, 68, 0.2); }
+        .icon-btn.primary:hover { color: var(--primary); }
 
-        .subjects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .subject-card { padding: 1.5rem; border-radius: 20px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); transition: var(--transition); }
-        .subject-card:hover { border-color: rgba(56, 189, 248, 0.3); background: rgba(255, 255, 255, 0.05); }
-        .subject-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.8rem; }
-        .lecture-list { display: flex; flex-direction: column; gap: 0.8rem; }
-        .lecture-item { background: rgba(255,255,255,0.03); padding: 0.8rem 1rem; border-radius: 12px; font-weight: 500; cursor: pointer; transition: var(--transition); border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; }
-        .lecture-item:hover { background: rgba(56, 189, 248, 0.1); border-color: var(--primary); color: var(--primary); transform: translateX(-5px); }
+        /* --- واجهة الطالب (الرئيسية) --- */
+        .subjects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .student-subject-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 1.5rem; transition: var(--transition); }
+        .student-subject-card:hover { border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .student-lecture-item { background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; margin-top: 0.8rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: var(--transition); border: 1px solid transparent; font-weight: 500; }
+        .student-lecture-item:hover { background: rgba(56, 189, 248, 0.1); border-color: var(--primary); color: var(--primary); transform: translateX(-5px); }
 
-        .admin-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; align-items: start; }
-        .admin-card { background: rgba(255, 255, 255, 0.02); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08); }
-        .admin-card h3 { color: var(--primary); margin-bottom: 1.2rem; font-size: 1.2rem; font-weight: 700; }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; padding: 1rem; }
-        .modal-overlay.active { opacity: 1; }
-        .modal-content { width: 100%; max-width: 400px; padding: 2.5rem 2rem; transform: scale(0.95); transition: transform 0.3s ease; text-align: center; }
-        .modal-overlay.active .modal-content { transform: scale(1); }
+        /* --- واجهة الاختبار --- */
+        .quiz-container { max-width: 700px; margin: 0 auto; width: 100%; background: var(--glass-bg); padding: 2rem; border-radius: 20px; border: 1px solid var(--glass-border); }
+        .quiz-option { display: block; width: 100%; padding: 1rem; margin-bottom: 1rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; transition: var(--transition); text-align: right; color: white; font-size: 1rem; }
+        .quiz-option:hover { background: rgba(255,255,255,0.08); border-color: var(--primary); }
+        .quiz-option.selected { background: var(--primary); color: var(--bg-main); border-color: var(--primary); font-weight: bold; }
+        .quiz-option.correct { background: var(--success); color: white; border-color: var(--success); }
+        .quiz-option.wrong { background: var(--error); color: white; border-color: var(--error); }
 
-        @media (max-width: 900px) { body { padding: 1rem 0.5rem; } .top-bar { flex-direction: column; gap: 1rem; align-items: stretch; text-align: center; } .btn { width: 100%; } .blob { filter: blur(50px); } .blob-1 { width: 280px; height: 280px; } .blob-2 { width: 250px; height: 250px; } .glass-panel { padding: 1rem; } }
+        /* --- تسجيل الدخول --- */
+        .login-box { max-width: 400px; margin: 10vh auto auto; padding: 2.5rem 2rem; background: var(--glass-bg); border-radius: 20px; border: 1px solid var(--glass-border); text-align: center; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes float-random-1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-30vw, 30vh) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
-        @keyframes float-random-2 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30vw, -30vh) scale(0.9); } 100% { transform: translate(0, 0) scale(1); } }
+        @keyframes float-random-1 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-10vw, 10vh) scale(1.1); } }
+        @keyframes float-random-2 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(10vw, -10vh) scale(0.9); } }
     </style>
 </head>
 <body>
@@ -105,89 +114,109 @@
         <div class="blob blob-2"></div>
     </div>
 
-    <div class="container glass-panel">
-        
-        <!-- ==================== الواجهة 1: الرئيسية ==================== -->
-        <div id="home-view" class="view-section active">
-            <div class="top-bar">
-                <h1 class="page-title">المنصة التعليمية</h1>
-                <button class="btn btn-secondary" onclick="openLoginModal()">تسجيل دخول المشرفين</button>
-            </div>
-            
-            <div class="scrollable">
-                <div class="subjects-grid" id="subjects-container">
-                    <p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; width: 100%;">جاري تحميل المواد...</p>
-                </div>
-            </div>
+    <!-- ==================== 1. واجهة الطالب (الرئيسية) ==================== -->
+    <div id="student-view" class="view-section active">
+        <div class="top-bar">
+            <h1 style="color: var(--primary);"><i class="fa-solid fa-graduation-cap"></i> منصة الاختبارات</h1>
+            <button class="btn btn-secondary" onclick="switchView('auth-view')"><i class="fa-solid fa-user-shield"></i> الإدارة</button>
         </div>
-
-        <!-- ==================== الواجهة 2: لوحة التحكم ==================== -->
-        <div id="admin-view" class="view-section">
-            <div class="top-bar">
-                <h1 class="page-title">لوحة التحكم</h1>
-                <div style="display: flex; gap: 1rem;">
-                    <button class="btn btn-secondary" onclick="switchView('home-view')">عودة للرئيسية</button>
-                    <button class="btn btn-danger" onclick="logout()">تسجيل خروج</button>
-                </div>
-            </div>
-
-            <div class="scrollable">
-                <div class="admin-sections">
-                    <div class="admin-card">
-                        <h3>إضافة مادة جديدة</h3>
-                        <input type="text" id="subject-name" class="glass-input" placeholder="اسم المادة (مثال: Anatomy)">
-                        <button class="btn btn-primary" style="width: 100%;" onclick="addSubject()">إضافة المادة</button>
-                    </div>
-
-                    <div class="admin-card">
-                        <h3>إضافة محاضرة جديدة</h3>
-                        <select class="glass-input" id="admin-subject-select">
-                            <option value="" disabled selected>اختر المادة</option>
-                        </select>
-                        <input type="text" class="glass-input" placeholder="عنوان المحاضرة">
-                        <button class="btn btn-primary" style="width: 100%;">إضافة المحاضرة</button>
-                    </div>
-
-                    <div class="admin-card" style="grid-column: 1 / -1;">
-                        <h3>إضافة أسئلة للمحاضرة</h3>
-                        <h4 style="color: var(--text-muted); text-align: center; margin-top: 1rem;">(سيتم تفعيل هذا القسم لاحقاً)</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ==================== الواجهة 3: شاشة الاختبار ==================== -->
-        <div id="quiz-view" class="view-section">
-            <div class="top-bar" style="justify-content: center; position: relative;">
-                <button class="btn btn-secondary" style="position: absolute; right: 0;" onclick="switchView('home-view')">خروج</button>
-                <h1 class="page-title" style="font-size: 1.5rem;" id="current-quiz-title">جاري تحميل الاختبار...</h1>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; gap: 1rem;">
-                <h3 style="color: var(--text-muted)">سيتم عرض الأسئلة هنا</h3>
+        <div class="scrollable-content">
+            <div class="subjects-grid" id="student-subjects-container">
+                <p style="text-align: center; width: 100%; color: var(--text-muted);">جاري تحميل البيانات...</p>
             </div>
         </div>
     </div>
 
-    <!-- ==================== نافذة تسجيل الدخول ==================== -->
-    <div class="modal-overlay" id="login-modal">
-        <div class="glass-panel modal-content">
-            <h2 style="color: var(--primary); margin-bottom: 2rem; font-weight: 800;">دخول المشرفين</h2>
-            <input type="email" class="glass-input" id="admin-user" placeholder="البريد الإلكتروني">
-            <input type="password" class="glass-input" id="admin-pass" placeholder="كلمة المرور">
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="closeLoginModal()">إلغاء</button>
-                <button class="btn btn-primary" style="flex: 2;" onclick="mockLogin()">تسجيل الدخول</button>
+    <!-- ==================== 2. واجهة الاختبار ==================== -->
+    <div id="quiz-view" class="view-section">
+        <div class="top-bar">
+            <h2 id="quiz-title" style="color: var(--primary);">الاختبار</h2>
+            <button class="btn btn-secondary" onclick="switchView('student-view')"><i class="fa-solid fa-xmark"></i> إنهاء</button>
+        </div>
+        <div class="scrollable-content" style="display: flex; align-items: center; justify-content: center;">
+            <div class="quiz-container" id="quiz-content">
+                <!-- سيتم حقن الأسئلة هنا -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 3. تسجيل الدخول ==================== -->
+    <div id="auth-view" class="view-section">
+        <div class="top-bar" style="border: none;">
+            <button class="icon-btn" onclick="switchView('student-view')" style="font-size: 1.5rem;"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+        <div class="login-box">
+            <h2 style="margin-bottom: 2rem; color: var(--primary);">دخول المشرفين</h2>
+            <input type="email" id="admin-user" class="glass-input" placeholder="البريد الإلكتروني" style="margin-bottom: 1rem;">
+            <input type="password" id="admin-pass" class="glass-input" placeholder="كلمة المرور" style="margin-bottom: 1.5rem;">
+            <button class="btn" style="width: 100%; justify-content: center;" onclick="login()">دخول <i class="fa-solid fa-right-to-bracket"></i></button>
+        </div>
+    </div>
+
+    <!-- ==================== 4. واجهة الإدارة ==================== -->
+    <div id="admin-view" class="view-section">
+        <div class="top-bar">
+            <h2 style="color: var(--primary);"><i class="fa-solid fa-database"></i> إدارة المنصة</h2>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary" onclick="switchView('student-view')"><i class="fa-solid fa-house"></i> الرئيسية</button>
+                <button class="btn" style="background: rgba(239, 68, 68, 0.2); color: var(--error);" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
+            </div>
+        </div>
+
+        <div class="admin-layout">
+            <!-- صندوق المواد -->
+            <div class="admin-box active" id="box-subjects">
+                <h3 style="margin-bottom: 1rem; color: #fff;"><i class="fa-solid fa-book"></i> المواد</h3>
+                <div class="input-group">
+                    <input type="text" id="subject-input" class="glass-input" placeholder="اسم المادة...">
+                    <button id="subject-btn" class="btn-action" onclick="saveSubject()"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div class="scrollable-content" id="subjects-list"></div>
+            </div>
+
+            <!-- صندوق المحاضرات -->
+            <div class="admin-box" id="box-lectures">
+                <h3 style="margin-bottom: 1rem; color: #fff;"><i class="fa-solid fa-file-video"></i> المحاضرات</h3>
+                <div class="input-group">
+                    <input type="text" id="lecture-input" class="glass-input" placeholder="عنوان المحاضرة...">
+                    <button id="lecture-btn" class="btn-action" onclick="saveLecture()"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div class="scrollable-content" id="lectures-list"></div>
+            </div>
+
+            <!-- صندوق الأسئلة -->
+            <div class="admin-box" id="box-questions">
+                <h3 style="margin-bottom: 1rem; color: #fff;"><i class="fa-solid fa-clipboard-question"></i> الأسئلة</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+                    <textarea id="q-text" class="glass-input" placeholder="نص السؤال..." style="resize: vertical; min-height: 80px;"></textarea>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <input type="text" id="q-opt-a" class="glass-input" placeholder="خيار A" style="margin:0;">
+                        <input type="text" id="q-opt-b" class="glass-input" placeholder="خيار B" style="margin:0;">
+                        <input type="text" id="q-opt-c" class="glass-input" placeholder="خيار C" style="margin:0;">
+                        <input type="text" id="q-opt-d" class="glass-input" placeholder="خيار D" style="margin:0;">
+                    </div>
+                    
+                    <div class="input-group" style="margin-top: 0.5rem;">
+                        <select id="q-correct" class="glass-input">
+                            <option value="a">الإجابة الصحيحة: A</option>
+                            <option value="b">الإجابة الصحيحة: B</option>
+                            <option value="c">الإجابة الصحيحة: C</option>
+                            <option value="d">الإجابة الصحيحة: D</option>
+                        </select>
+                        <button id="question-btn" class="btn-action" onclick="saveQuestion()"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+                <div class="scrollable-content" id="questions-list"></div>
             </div>
         </div>
     </div>
 
 <script type="module">
-    // استيراد مكتبات فايربيس (إصدار Realtime Database)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, set, onValue, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // إعدادات مشروعك الجديدة
     const firebaseConfig = {
         apiKey: "AIzaSyAzh6pmoW-thU6AzlUzJH4rwqz1J5rLDBY",
         authDomain: "quiz-it-b775f.firebaseapp.com",
@@ -203,118 +232,360 @@
     const db = getDatabase(app);
 
     // ==========================================
-    // دوال الواجهة
+    // التنقل بين الواجهات
     // ==========================================
     window.switchView = function(viewId) {
         document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
-    }
-
-    const loginModal = document.getElementById('login-modal');
-    window.openLoginModal = function() {
-        loginModal.style.display = 'flex';
-        setTimeout(() => loginModal.classList.add('active'), 10);
-    }
-    
-    window.closeLoginModal = function() {
-        loginModal.classList.remove('active');
-        setTimeout(() => loginModal.style.display = 'none', 300);
+        if (viewId === 'student-view') fetchStudentData();
     }
 
     // ==========================================
     // المصادقة
     // ==========================================
-    window.mockLogin = function() {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            switchView('admin-view');
+            loadAdminSubjects();
+        }
+    });
+
+    window.login = function() {
         const email = document.getElementById('admin-user').value.trim();
         const pass = document.getElementById('admin-pass').value.trim();
-
-        if(!email || !pass) {
-            alert("الرجاء إدخال البريد وكلمة المرور");
-            return;
-        }
-
-        signInWithEmailAndPassword(auth, email, pass)
-            .then(() => {
-                closeLoginModal();
-                switchView('admin-view');
-                document.getElementById('admin-user').value = '';
-                document.getElementById('admin-pass').value = '';
-            })
-            .catch((error) => {
-                alert("فشل تسجيل الدخول: " + error.message);
-                console.error(error);
-            });
-    }
-
-    window.logout = function() {
-        signOut(auth).then(() => switchView('home-view'));
-    }
+        if(email && pass) signInWithEmailAndPassword(auth, email, pass).catch(() => {});
+    };
+    window.logout = () => signOut(auth).then(() => switchView('student-view'));
 
     // ==========================================
-    // قاعدة البيانات (Realtime Database)
+    // واجهة الطالب (عرض المواد والاختبار)
     // ==========================================
-    
-    // دالة إضافة مادة
-    window.addSubject = async function() {
-        const subjectInput = document.getElementById('subject-name');
-        const subjectName = subjectInput.value.trim();
+    let studentDataCache = { subjects: [], lectures: [], questions: [] };
 
-        if (!subjectName) {
-            alert("الرجاء إدخال اسم المادة!");
-            return;
-        }
+    function fetchStudentData() {
+        // جلب المواد والمحاضرات للطلاب (عامة)
+        get(ref(db, 'subjects')).then(sSnap => {
+            get(ref(db, 'lectures')).then(lSnap => {
+                const container = document.getElementById('student-subjects-container');
+                container.innerHTML = '';
+                
+                if (!sSnap.exists()) {
+                    container.innerHTML = '<p style="text-align: center; width: 100%;">لا توجد مواد متاحة حالياً.</p>';
+                    return;
+                }
 
-        try {
-            // إضافة البيانات إلى مسار 'subjects' في Realtime DB
-            const subjectsRef = ref(db, 'subjects');
-            const newSubjectRef = push(subjectsRef);
-            await set(newSubjectRef, {
-                name: subjectName,
-                createdAt: Date.now()
+                const subjects = [];
+                sSnap.forEach(c => subjects.push({ id: c.key, ...c.val() }));
+                subjects.sort((a,b) => a.order - b.order);
+
+                const allLectures = [];
+                if (lSnap.exists()) {
+                    lSnap.forEach(c => allLectures.push({ id: c.key, ...c.val() }));
+                }
+
+                subjects.forEach(sub => {
+                    const subLectures = allLectures.filter(l => l.subjectId === sub.id).sort((a,b) => a.order - b.order);
+                    let lecturesHTML = subLectures.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem; text-align:center; margin-top:1rem;">لا توجد محاضرات</p>' : '';
+                    
+                    subLectures.forEach(lec => {
+                        lecturesHTML += `
+                            <div class="student-lecture-item" onclick="initQuiz('${lec.id}', '${lec.name}')">
+                                <span>${lec.name}</span>
+                                <i class="fa-solid fa-play" style="color: var(--primary);"></i>
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML += `
+                        <div class="student-subject-card">
+                            <h2 style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.8rem; color: #fff;">${sub.name}</h2>
+                            <div>${lecturesHTML}</div>
+                        </div>
+                    `;
+                });
             });
-            
-            alert("تمت الإضافة بنجاح!");
-            subjectInput.value = ''; 
-        } catch (error) {
-            console.error(error);
-            alert("حدث خطأ أثناء الحفظ: " + error.message);
-        }
+        });
     }
 
-    // دالة جلب وعرض المواد (مستمع في الوقت الفعلي)
-    window.loadSubjects = function() {
-        const container = document.getElementById('subjects-container');
-        const subjectsRef = ref(db, 'subjects');
-        
-        onValue(subjectsRef, (snapshot) => {
-            container.innerHTML = ''; 
-            const data = snapshot.val();
+    // تشغيل جلب بيانات الطالب عند البداية
+    window.addEventListener('DOMContentLoaded', fetchStudentData);
+
+    // ==========================================
+    // نظام الاختبار (الأسئلة)
+    // ==========================================
+    let currentQuizQuestions = [];
+    let currentQuestionIndex = 0;
+    let quizScore = 0;
+
+    window.initQuiz = function(lectureId, lectureName) {
+        document.getElementById('quiz-title').innerText = lectureName;
+        document.getElementById('quiz-content').innerHTML = '<p style="text-align:center;">جاري تحميل الأسئلة...</p>';
+        switchView('quiz-view');
+
+        get(query(ref(db, 'questions'), orderByChild('lectureId'), equalTo(lectureId))).then(snap => {
+            currentQuizQuestions = [];
+            if (snap.exists()) {
+                snap.forEach(c => currentQuizQuestions.push({ id: c.key, ...c.val() }));
+                currentQuizQuestions.sort((a,b) => a.order - b.order);
+            }
             
-            if (!data) {
-                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1;">لا توجد مواد مضافة حتى الآن.</p>';
+            if (currentQuizQuestions.length === 0) {
+                document.getElementById('quiz-content').innerHTML = '<h3 style="text-align:center; color: var(--error);">لا توجد أسئلة لهذه المحاضرة بعد.</h3>';
                 return;
             }
 
-            // تحويل الكائن إلى مصفوفة لعرضها
-            Object.keys(data).forEach((key) => {
-                const subject = data[key];
-                container.innerHTML += `
-                    <div class="subject-card">
-                        <h2 class="subject-title">${subject.name}</h2>
-                        <div class="lecture-list" id="lectures-${key}">
-                            <span style="color: var(--text-muted); font-size: 0.9rem;">(لا توجد محاضرات بعد)</span>
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            renderQuestion();
+        });
+    }
+
+    function renderQuestion() {
+        const q = currentQuizQuestions[currentQuestionIndex];
+        const container = document.getElementById('quiz-content');
+        
+        let html = `
+            <div style="display:flex; justify-content:space-between; margin-bottom: 1rem; color: var(--primary); font-weight:bold;">
+                <span>السؤال ${currentQuestionIndex + 1} من ${currentQuizQuestions.length}</span>
+                <span>النتيجة: ${quizScore}</span>
+            </div>
+            <h2 style="margin-bottom: 2rem; line-height: 1.5;">${q.text}</h2>
+            <div id="options-container">
+        `;
+
+        ['a', 'b', 'c', 'd'].forEach(key => {
+            if (q.options[key]) {
+                html += `<button class="quiz-option" onclick="selectAnswer('${key}', this)">${q.options[key]}</button>`;
+            }
+        });
+
+        html += `
+            </div>
+            <button id="next-btn" class="btn" style="width:100%; margin-top:1.5rem; display:none;" onclick="nextQuestion()">التالي</button>
+        `;
+        container.innerHTML = html;
+    }
+
+    window.selectAnswer = function(selectedKey, btnElement) {
+        // منع الإجابة مرتين
+        if (document.getElementById('next-btn').style.display !== 'none') return;
+        
+        const q = currentQuizQuestions[currentQuestionIndex];
+        const options = document.getElementById('options-container').children;
+        
+        for (let opt of options) {
+            opt.style.pointerEvents = 'none'; // تعطيل الأزرار
+        }
+
+        if (selectedKey === q.correct) {
+            btnElement.classList.add('correct');
+            quizScore++;
+        } else {
+            btnElement.classList.add('wrong');
+            // إظهار الإجابة الصحيحة
+            const correctIndex = ['a', 'b', 'c', 'd'].indexOf(q.correct);
+            if (correctIndex !== -1 && options[correctIndex]) {
+                options[correctIndex].classList.add('correct');
+            }
+        }
+
+        document.getElementById('next-btn').style.display = 'block';
+        if (currentQuestionIndex === currentQuizQuestions.length - 1) {
+            document.getElementById('next-btn').innerText = 'إنهاء وعرض النتيجة';
+        }
+    }
+
+    window.nextQuestion = function() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < currentQuizQuestions.length) {
+            renderQuestion();
+        } else {
+            // عرض النتيجة النهائية
+            const container = document.getElementById('quiz-content');
+            const percentage = Math.round((quizScore / currentQuizQuestions.length) * 100);
+            let message = percentage >= 50 ? '<span style="color:var(--success);">مبروك! لقد نجحت</span>' : '<span style="color:var(--error);">حاول مرة أخرى</span>';
+            
+            container.innerHTML = `
+                <div style="text-align: center;">
+                    <i class="fa-solid fa-award" style="font-size: 5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                    <h2>اكتمل الاختبار</h2>
+                    <h1 style="font-size: 3rem; margin: 1rem 0;">${percentage}%</h1>
+                    <h3>أجبت بشكل صحيح على ${quizScore} من أصل ${currentQuizQuestions.length}</h3>
+                    <h3 style="margin-top: 1rem;">${message}</h3>
+                    <button class="btn" style="margin-top: 2rem;" onclick="switchView('student-view')">عودة للرئيسية</button>
+                </div>
+            `;
+        }
+    }
+
+    // ==========================================
+    // واجهة الإدارة (المشرفين)
+    // ==========================================
+    let activeSubjectId = null;
+    let activeLectureId = null;
+    let editingSubjectId = null;
+    let editingLectureId = null;
+    let editingQuestionId = null;
+    let lecturesUnsub = null;
+    let questionsUnsub = null;
+
+    function loadAdminSubjects() {
+        onValue(query(ref(db, 'subjects'), orderByChild('order')), (snapshot) => {
+            const list = document.getElementById('subjects-list');
+            list.innerHTML = '';
+            snapshot.forEach((child) => {
+                const item = child.val();
+                const id = child.key;
+                const isSelected = id === activeSubjectId ? 'selected' : '';
+                list.innerHTML += `
+                    <div class="list-item ${isSelected}" onclick="selectSubject('${id}')">
+                        <div style="font-weight: 600;">${item.name}</div>
+                        <div>
+                            <button class="icon-btn primary" onclick="event.stopPropagation(); editSubject('${id}', '${item.name}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="icon-btn danger" onclick="event.stopPropagation(); deleteSubject('${id}')"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 `;
             });
-        }, (error) => {
-            console.error("خطأ في جلب المواد:", error);
-            container.innerHTML = '<p style="color: var(--error); text-align: center; grid-column: 1 / -1;">حدث خطأ أثناء تحميل البيانات.</p>';
         });
     }
 
-    // استدعاء جلب المواد عند تحميل الصفحة
-    window.addEventListener('DOMContentLoaded', loadSubjects);
+    window.saveSubject = function() {
+        const name = document.getElementById('subject-input').value.trim();
+        if (!name) return;
+        if (editingSubjectId) {
+            update(ref(db, `subjects/${editingSubjectId}`), { name: name });
+            editingSubjectId = null;
+            const btn = document.getElementById('subject-btn');
+            btn.innerHTML = '<i class="fa-solid fa-plus"></i>'; btn.classList.remove('edit-mode');
+        } else {
+            push(ref(db, 'subjects'), { name: name, order: Date.now() });
+        }
+        document.getElementById('subject-input').value = '';
+    }
+
+    window.editSubject = function(id, name) {
+        editingSubjectId = id;
+        document.getElementById('subject-input').value = name;
+        const btn = document.getElementById('subject-btn');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>'; btn.classList.add('edit-mode');
+    }
+
+    window.selectSubject = function(id) {
+        activeSubjectId = id; activeLectureId = null;
+        loadAdminSubjects(); 
+        document.getElementById('box-lectures').classList.add('active');
+        document.getElementById('box-questions').classList.remove('active');
+        loadAdminLectures(id);
+    }
+
+    window.deleteSubject = async function(id) {
+        const updates = {}; updates[`subjects/${id}`] = null;
+        const lecSnap = await get(query(ref(db, 'lectures'), orderByChild('subjectId'), equalTo(id)));
+        if (lecSnap.exists()) {
+            for (let lecId in lecSnap.val()) {
+                updates[`lectures/${lecId}`] = null;
+                const qSnap = await get(query(ref(db, 'questions'), orderByChild('lectureId'), equalTo(lecId)));
+                if (qSnap.exists()) { for (let qId in qSnap.val()) updates[`questions/${qId}`] = null; }
+            }
+        }
+        await update(ref(db), updates);
+        if(activeSubjectId === id) { activeSubjectId = null; document.getElementById('box-lectures').classList.remove('active'); document.getElementById('box-questions').classList.remove('active'); }
+    }
+
+    // إدارة المحاضرات والأسئلة (مشابه للمواد)
+    function loadAdminLectures(subjectId) {
+        if(lecturesUnsub) lecturesUnsub();
+        lecturesUnsub = onValue(query(ref(db, 'lectures'), orderByChild('subjectId'), equalTo(subjectId)), (snapshot) => {
+            const list = document.getElementById('lectures-list'); list.innerHTML = '';
+            const arr = []; snapshot.forEach(c => arr.push({id: c.key, ...c.val()}));
+            arr.sort((a,b) => a.order - b.order).forEach(item => {
+                const isSelected = item.id === activeLectureId ? 'selected' : '';
+                list.innerHTML += `
+                    <div class="list-item ${isSelected}" onclick="selectLecture('${item.id}')">
+                        <div style="font-weight: 600;">${item.name}</div>
+                        <div>
+                            <button class="icon-btn primary" onclick="event.stopPropagation(); editLecture('${item.id}', '${item.name}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="icon-btn danger" onclick="event.stopPropagation(); deleteLecture('${item.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            });
+        });
+    }
+
+    window.saveLecture = function() {
+        const name = document.getElementById('lecture-input').value.trim();
+        if (!name || !activeSubjectId) return;
+        if (editingLectureId) {
+            update(ref(db, `lectures/${editingLectureId}`), { name: name });
+            editingLectureId = null;
+            const btn = document.getElementById('lecture-btn'); btn.innerHTML = '<i class="fa-solid fa-plus"></i>'; btn.classList.remove('edit-mode');
+        } else { push(ref(db, 'lectures'), { subjectId: activeSubjectId, name: name, order: Date.now() }); }
+        document.getElementById('lecture-input').value = '';
+    }
+    
+    window.editLecture = function(id, name) {
+        editingLectureId = id; document.getElementById('lecture-input').value = name;
+        const btn = document.getElementById('lecture-btn'); btn.innerHTML = '<i class="fa-solid fa-check"></i>'; btn.classList.add('edit-mode');
+    }
+
+    window.selectLecture = function(id) {
+        activeLectureId = id; loadAdminLectures(activeSubjectId); 
+        document.getElementById('box-questions').classList.add('active'); loadAdminQuestions(id);
+    }
+
+    window.deleteLecture = async function(id) {
+        const updates = {}; updates[`lectures/${id}`] = null;
+        const qSnap = await get(query(ref(db, 'questions'), orderByChild('lectureId'), equalTo(id)));
+        if (qSnap.exists()) { for (let qId in qSnap.val()) updates[`questions/${qId}`] = null; }
+        await update(ref(db), updates);
+        if(activeLectureId === id) { activeLectureId = null; document.getElementById('box-questions').classList.remove('active'); }
+    }
+
+    function loadAdminQuestions(lectureId) {
+        if(questionsUnsub) questionsUnsub();
+        questionsUnsub = onValue(query(ref(db, 'questions'), orderByChild('lectureId'), equalTo(lectureId)), (snapshot) => {
+            const list = document.getElementById('questions-list'); list.innerHTML = '';
+            const arr = []; snapshot.forEach(c => arr.push({id: c.key, ...c.val()}));
+            arr.sort((a,b) => a.order - b.order).forEach(item => {
+                const safeData = encodeURIComponent(JSON.stringify(item));
+                list.innerHTML += `
+                    <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 0.5rem; cursor: default;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="margin:0; font-size: 0.9rem;">${item.text}</div>
+                            <div>
+                                <button class="icon-btn primary" onclick="editQuestion('${safeData}')"><i class="fa-solid fa-pen"></i></button>
+                                <button class="icon-btn danger" onclick="deleteQuestion('${item.id}')"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--success);">الإجابة: ${item.correct.toUpperCase()}</div>
+                    </div>`;
+            });
+        });
+    }
+
+    window.saveQuestion = function() {
+        const text = document.getElementById('q-text').value.trim();
+        const optA = document.getElementById('q-opt-a').value.trim(), optB = document.getElementById('q-opt-b').value.trim();
+        const optC = document.getElementById('q-opt-c').value.trim(), optD = document.getElementById('q-opt-d').value.trim();
+        const correct = document.getElementById('q-correct').value;
+        if (!text || !optA || !optB || !activeLectureId) return;
+        const data = { lectureId: activeLectureId, text: text, options: { a: optA, b: optB, c: optC, d: optD }, correct: correct };
+
+        if (editingQuestionId) {
+            update(ref(db, `questions/${editingQuestionId}`), data); editingQuestionId = null;
+            const btn = document.getElementById('question-btn'); btn.innerHTML = '<i class="fa-solid fa-plus"></i>'; btn.classList.remove('edit-mode');
+        } else { data.order = Date.now(); push(ref(db, 'questions'), data); }
+        
+        document.getElementById('q-text').value = ''; document.getElementById('q-opt-a').value = ''; document.getElementById('q-opt-b').value = ''; document.getElementById('q-opt-c').value = ''; document.getElementById('q-opt-d').value = ''; document.getElementById('q-correct').value = 'a';
+    }
+
+    window.editQuestion = function(safeData) {
+        const item = JSON.parse(decodeURIComponent(safeData)); editingQuestionId = item.id;
+        document.getElementById('q-text').value = item.text; document.getElementById('q-opt-a').value = item.options.a || ''; document.getElementById('q-opt-b').value = item.options.b || ''; document.getElementById('q-opt-c').value = item.options.c || ''; document.getElementById('q-opt-d').value = item.options.d || ''; document.getElementById('q-correct').value = item.correct;
+        const btn = document.getElementById('question-btn'); btn.innerHTML = '<i class="fa-solid fa-check"></i>'; btn.classList.add('edit-mode');
+    }
+    window.deleteQuestion = (id) => update(ref(db), { [`questions/${id}`]: null });
 
 </script>
 </body>
