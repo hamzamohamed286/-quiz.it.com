@@ -1,11 +1,312 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello You</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --primary: #38bdf8;
+            --primary-hover: #0ea5e9;
+            --success: #10b981;
+            --error: #ef4444;
+            --skipped: #64748b;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --glass-bg: rgba(15, 23, 42, 0.2); 
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            --glass-blur: blur(20px);
+            --empty-circle: rgba(255, 255, 255, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --blob-1: #38bdf8;
+            --blob-2: #818cf8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+
+        body { 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            height: 100dvh; 
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 2rem 1rem 1rem 1rem; 
+            overflow: hidden; 
+            position: relative; 
+        }
+
+        .background-blobs { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; pointer-events: none; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.45; }
+        .blob-1 { width: 450px; height: 450px; background: var(--blob-1); top: -10%; right: -10%; animation: float-random-1 70s infinite ease-in-out; }
+        .blob-2 { width: 400px; height: 400px; background: var(--blob-2); bottom: -10%; left: -10%; animation: float-random-2 80s infinite ease-in-out; }
+
+        .container { max-width: 1100px; width: 100%; flex-grow: 1; display: flex; gap: 1.5rem; min-height: 0; position: relative; z-index: 10; }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 24px; padding: 1.5rem; box-shadow: var(--glass-shadow); display: flex; flex-direction: column; }
+        
+        .view-section { display: none; width: 100%; height: 100%; animation: fadeIn 0.4s ease forwards; }
+        .view-section.active { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0; }
+        .page-title { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; color: var(--primary); }
+        
+        .btn { border-radius: 14px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); color: #fff; display: flex; align-items: center; justify-content: center; padding: 0.8rem 1.5rem; }
+        .btn-primary { background: var(--primary); color: var(--bg-main); box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+        .btn-danger { background: rgba(239, 68, 68, 0.15); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.4); }
+        .btn-danger:hover { background: var(--error); color: #fff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+
+        .glass-input { width: 100%; padding: 1rem 1.2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; color: var(--text-main); font-size: 1rem; margin-bottom: 1rem; transition: var(--transition); }
+        .glass-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); background: rgba(255, 255, 255, 0.08); }
+        .glass-input::placeholder { color: var(--text-muted); opacity: 0.6; }
+        
+        textarea.glass-input { resize: vertical; min-height: 100px; }
+        select.glass-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2338bdf8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: left 1rem top 50%; background-size: 0.8rem auto; }
+        select.glass-input option { background: var(--bg-main); color: var(--text-main); }
+
+        .scrollable { overflow-y: auto; padding-left: 5px; }
+        .scrollable::-webkit-scrollbar { width: 5px; }
+        .scrollable::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+
+        .subjects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .subject-card { padding: 1.5rem; border-radius: 20px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); transition: var(--transition); }
+        .subject-card:hover { border-color: rgba(56, 189, 248, 0.3); background: rgba(255, 255, 255, 0.05); }
+        .subject-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.8rem; }
+        .lecture-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .lecture-item { background: rgba(255,255,255,0.03); padding: 0.8rem 1rem; border-radius: 12px; font-weight: 500; cursor: pointer; transition: var(--transition); border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; }
+        .lecture-item:hover { background: rgba(56, 189, 248, 0.1); border-color: var(--primary); color: var(--primary); transform: translateX(-5px); }
+
+        .admin-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; align-items: start; }
+        .admin-card { background: rgba(255, 255, 255, 0.02); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .admin-card h3 { color: var(--primary); margin-bottom: 1.2rem; font-size: 1.2rem; font-weight: 700; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; padding: 1rem; }
+        .modal-overlay.active { opacity: 1; }
+        .modal-content { width: 100%; max-width: 400px; padding: 2.5rem 2rem; transform: scale(0.95); transition: transform 0.3s ease; text-align: center; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        @media (max-width: 900px) { body { padding: 1rem 0.5rem; } .top-bar { flex-direction: column; gap: 1rem; align-items: stretch; text-align: center; } .btn { width: 100%; } .blob { filter: blur(50px); } .blob-1 { width: 280px; height: 280px; } .blob-2 { width: 250px; height: 250px; } .glass-panel { padding: 1rem; } }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float-random-1 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-30vw, 30vh) scale(1.1); } 100% { transform: translate(0, 0) scale(1); } }
+        @keyframes float-random-2 { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30vw, -30vh) scale(0.9); } 100% { transform: translate(0, 0) scale(1); } }
+    </style>
 </head>
 <body>
-    Hey You!
+
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container glass-panel">
+        
+        <!-- ==================== الواجهة 1: الرئيسية ==================== -->
+        <div id="home-view" class="view-section active">
+            <div class="top-bar">
+                <h1 class="page-title">المنصة التعليمية</h1>
+                <button class="btn btn-secondary" onclick="openLoginModal()">تسجيل دخول المشرفين</button>
+            </div>
+            
+            <div class="scrollable">
+                <div class="subjects-grid" id="subjects-container">
+                    <p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; width: 100%;">جاري تحميل المواد...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== الواجهة 2: لوحة التحكم ==================== -->
+        <div id="admin-view" class="view-section">
+            <div class="top-bar">
+                <h1 class="page-title">لوحة التحكم</h1>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-secondary" onclick="switchView('home-view')">عودة للرئيسية</button>
+                    <button class="btn btn-danger" onclick="logout()">تسجيل خروج</button>
+                </div>
+            </div>
+
+            <div class="scrollable">
+                <div class="admin-sections">
+                    <div class="admin-card">
+                        <h3>إضافة مادة جديدة</h3>
+                        <input type="text" id="subject-name" class="glass-input" placeholder="اسم المادة (مثال: Anatomy)">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="addSubject()">إضافة المادة</button>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3>إضافة محاضرة جديدة</h3>
+                        <select class="glass-input" id="admin-subject-select">
+                            <option value="" disabled selected>اختر المادة</option>
+                        </select>
+                        <input type="text" class="glass-input" placeholder="عنوان المحاضرة">
+                        <button class="btn btn-primary" style="width: 100%;">إضافة المحاضرة</button>
+                    </div>
+
+                    <div class="admin-card" style="grid-column: 1 / -1;">
+                        <h3>إضافة أسئلة للمحاضرة</h3>
+                        <h4 style="color: var(--text-muted); text-align: center; margin-top: 1rem;">(سيتم تفعيل هذا القسم لاحقاً)</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== الواجهة 3: شاشة الاختبار ==================== -->
+        <div id="quiz-view" class="view-section">
+            <div class="top-bar" style="justify-content: center; position: relative;">
+                <button class="btn btn-secondary" style="position: absolute; right: 0;" onclick="switchView('home-view')">خروج</button>
+                <h1 class="page-title" style="font-size: 1.5rem;" id="current-quiz-title">جاري تحميل الاختبار...</h1>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; gap: 1rem;">
+                <h3 style="color: var(--text-muted)">سيتم عرض الأسئلة هنا</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== نافذة تسجيل الدخول ==================== -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="glass-panel modal-content">
+            <h2 style="color: var(--primary); margin-bottom: 2rem; font-weight: 800;">دخول المشرفين</h2>
+            <input type="email" class="glass-input" id="admin-user" placeholder="البريد الإلكتروني">
+            <input type="password" class="glass-input" id="admin-pass" placeholder="كلمة المرور">
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeLoginModal()">إلغاء</button>
+                <button class="btn btn-primary" style="flex: 2;" onclick="mockLogin()">تسجيل الدخول</button>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // مفتاح API تم تصحيحه (استبدال حرف O بالرقم 0)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDeZWl6hJ2DD09NDmjrsVIoIq4p65QWGzw",
+        authDomain: "quiz-it-com.firebaseapp.com",
+        projectId: "quiz-it-com",
+        storageBucket: "quiz-it-com.firebasestorage.app",
+        messagingSenderId: "918612457601",
+        appId: "1:918612457601:web:18ddac1077cf6a0539f580"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ==========================================
+    // دوال الواجهة
+    // ==========================================
+    window.switchView = function(viewId) {
+        document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+    }
+
+    const loginModal = document.getElementById('login-modal');
+    window.openLoginModal = function() {
+        loginModal.style.display = 'flex';
+        setTimeout(() => loginModal.classList.add('active'), 10);
+    }
+    
+    window.closeLoginModal = function() {
+        loginModal.classList.remove('active');
+        setTimeout(() => loginModal.style.display = 'none', 300);
+    }
+
+    // ==========================================
+    // المصادقة
+    // ==========================================
+    window.mockLogin = function() {
+        const email = document.getElementById('admin-user').value.trim();
+        const pass = document.getElementById('admin-pass').value.trim();
+
+        if(!email || !pass) {
+            alert("الرجاء إدخال البريد وكلمة المرور");
+            return;
+        }
+
+        signInWithEmailAndPassword(auth, email, pass)
+            .then(() => {
+                closeLoginModal();
+                switchView('admin-view');
+                document.getElementById('admin-user').value = '';
+                document.getElementById('admin-pass').value = '';
+            })
+            .catch((error) => {
+                alert("فشل تسجيل الدخول: " + error.message);
+                console.error(error);
+            });
+    }
+
+    window.logout = function() {
+        signOut(auth).then(() => switchView('home-view'));
+    }
+
+    // ==========================================
+    // قاعدة البيانات (جلب وإضافة المواد)
+    // ==========================================
+    window.loadSubjects = async function() {
+        const container = document.getElementById('subjects-container');
+        try {
+            const q = query(collection(db, "subjects"), orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+            
+            container.innerHTML = ''; 
+            
+            if (querySnapshot.empty) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1;">لا توجد مواد مضافة حتى الآن.</p>';
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const subject = doc.data();
+                container.innerHTML += `
+                    <div class="subject-card">
+                        <h2 class="subject-title">${subject.name}</h2>
+                        <div class="lecture-list" id="lectures-${doc.id}">
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">(لا توجد محاضرات بعد)</span>
+                        </div>
+                    </div>
+                `;
+            });
+        } catch (error) {
+            console.error("خطأ في جلب المواد:", error);
+            container.innerHTML = '<p style="color: var(--error); text-align: center; grid-column: 1 / -1;">حدث خطأ أثناء تحميل البيانات. الرجاء التحقق من الصلاحيات.</p>';
+        }
+    }
+
+    window.addSubject = async function() {
+        const subjectInput = document.getElementById('subject-name');
+        const subjectName = subjectInput.value.trim();
+
+        if (!subjectName) {
+            alert("الرجاء إدخال اسم المادة!");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "subjects"), {
+                name: subjectName,
+                createdAt: new Date()
+            });
+            alert("تمت الإضافة بنجاح!");
+            subjectInput.value = ''; 
+            loadSubjects(); // تحديث القائمة فوراً
+        } catch (error) {
+            console.error(error);
+            alert("حدث خطأ أثناء الحفظ: " + error.message);
+        }
+    }
+
+    // استدعاء جلب المواد عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', loadSubjects);
+
+</script>
 </body>
 </html>
